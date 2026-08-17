@@ -34,6 +34,22 @@ Numerical validation of quadratic residual scaling for tangent-structured pertur
 
 ---
 
+## Synthetic Data Results
+
+### Residual Scaling Plot
+
+![Residual Scaling Plot](results/residual_scaling_plot.png)
+
+*Figure 1: Log-log plot showing quadratic (O(ε²)) vs linear (O(ε)) scaling of residuals for synthetic data (n=100, p=10).*
+
+### Rank Dependence Plot
+
+![Rank Dependence](results/rank_dependence.png)
+
+*Figure 2: Backward error vs rank p at ε = 10⁻⁶, showing decrease with rank.*
+
+---
+
 ## Rank Dependence (ε = 10⁻⁶)
 
 | Rank p | Backward Error | Ratio |
@@ -46,12 +62,29 @@ Numerical validation of quadratic residual scaling for tangent-structured pertur
 
 ---
 
-## Installation
+## CIFAR-10 Validation Results
+
+### CIFAR-10 Residual Scaling
+
+![CIFAR-10 Results](results/cifar10_residual_scaling.png)
+
+*Figure 3: Residual scaling on CIFAR-10 PCA projector (n=1024, p=10), confirming quadratic behavior on real data.*
+
+| ε | Tangent Residual | Tangent Error | Ratio |
+|---|---|---|---|
+| 1.000e-02 | 2.250e-05 | 2.250e-05 | 0.225 |
+| 1.000e-04 | 2.250e-09 | 2.250e-09 | 0.225 |
+| 1.000e-06 | 2.260e-13 | 2.260e-13 | 0.226 |
+
+**Conclusion:** The quadratic law holds for real-world data projectors.
+
+---
+
+## Usage
 
 ```bash
-git clone https://github.com/kubwimanap/operator_based_analysis.git
-cd operator_based_analysis
-pip install -r python/requirements.txt
+cd python
+python experiments.py
 
 
 operator_based_analysis/
