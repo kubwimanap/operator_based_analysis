@@ -52,7 +52,8 @@ Numerical validation of quadratic residual scaling for tangent-structured pertur
 git clone https://github.com/kubwimanap/operator_based_analysis.git
 cd operator_based_analysis
 pip install -r python/requirements.txt
-## Code Structure
+
+
 operator_based_analysis/
 ├── python/
 │   ├── experiments.py
@@ -64,8 +65,11 @@ operator_based_analysis/
 ├── Synthetic_matlab/
 ├── synthetic_dataset/
 └── README.md
-## Citation
+
+
 @article{kubwimana2026operator,
   title={Operator-Based Analysis of Numerical Projection Perturbations in Grassmann Manifold Optimization},
   author={Kubwimana, Pascal and Reddy, B. Prabhakar and Mkenyeleye, Jason M.},
-  year={2026}}
+  year={2026}
+}
+
