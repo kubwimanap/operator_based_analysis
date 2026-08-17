@@ -5,6 +5,8 @@ Produces both table and plot outputs.
 
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')  # Force interactive backend
 import matplotlib.pyplot as plt
 import os
 
@@ -175,81 +177,22 @@ if __name__ == "__main__":
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     print(f"Plot saved to {plot_path}")
     
-    # Show plot
-    plt.show()
+    # -----------------------------
+    # FIX: Show the plot window
+    # -----------------------------
+    print("\n" + "="*70)
+    print("DISPLAYING PLOT WINDOW")
+    print("="*70)
+    print("The plot window should open. Close it to continue.")
+    print("(If it doesn't open, check: results/residual_scaling_plot.png)")
+    print("="*70)
+    
+    # SHOW THE PLOT (this will open a window)
+    plt.show(block=True)  # This forces the window to stay open
     
     # -----------------------------
     # 6c. Print summary
     # -----------------------------
-    print("\n" + "="*70)
-    print("SUMMARY")
-    print("="*70)
-    print(f"Tangent ratio (ε² constant): ~{df['tangent_ratio'].mean():.3f}")
-    print(f"Non-tangent ratio (ε constant): ~{df['nontangent_ratio'].mean():.3f}")
-    print(f"Tangent advantage at ε=1e-6: ~{df['nontangent_residual'].iloc[0] / df['tangent_residual'].iloc[0]:.0f}x")
-    print("="*70)
-    print("\nEXPERIMENT COMPLETE!")
-
-
-# ... (your existing functions here) ...
-
-if __name__ == "__main__":
-    print("="*70)
-    print("GRASSMANN PROJECTOR PERTURBATION ANALYSIS")
-    print("="*70)
-    
-    # Run experiment
-    results = experiment()
-    df = pd.DataFrame(results)
-    
-    # Print table
-    print("\nTABLE: Residuals and Backward Errors vs ε")
-    print("="*70)
-    print(df.to_string(index=False, float_format="%.3e"))
-    
-    # Save CSV
-    df.to_csv("../results/grassmann_experiment_results.csv", index=False)
-    print(f"\nTable saved to ../results/grassmann_experiment_results.csv")
-    
-    # Generate plot
-    print("\nGENERATING PLOT: Residual Scaling")
-    print("="*70)
-    
-    plt.figure(figsize=(10, 7))
-    
-    # Plot data
-    plt.loglog(df["epsilon"], df["tangent_residual"], 'o-', 
-               color='blue', linewidth=2.5, markersize=10,
-               label="Tangent residual (O(ε²))")
-    plt.loglog(df["epsilon"], df["nontangent_residual"], 's-', 
-               color='orange', linewidth=2.5, markersize=10,
-               label="Non-tangent residual (O(ε))")
-    
-    # Reference lines
-    plt.loglog(df["epsilon"], df["epsilon"]**2, 'k--', 
-               linewidth=1.5, alpha=0.7, label="ε² reference")
-    plt.loglog(df["epsilon"], df["epsilon"], 'r--', 
-               linewidth=1.5, alpha=0.7, label="ε reference")
-    
-    plt.xlabel("Perturbation norm ε", fontsize=14)
-    plt.ylabel("Residual ∥P̃² - P̃∥_F", fontsize=14)
-    plt.title("Quadratic vs Linear Scaling of Residuals", fontsize=16)
-    plt.legend(loc='lower right', fontsize=12)
-    plt.grid(True, which="both", ls="--", alpha=0.3)
-    
-    plt.text(0.02, 0.98, f"n=100, p=10, trials=30", 
-             transform=plt.gca().transAxes, fontsize=11,
-             verticalalignment='top', 
-             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-    
-    # Save plot
-    plt.savefig("../results/residual_scaling_plot.png", dpi=300, bbox_inches='tight')
-    print("Plot saved to ../results/residual_scaling_plot.png")
-    
-    # SHOW THE PLOT (this will open a window)
-    plt.show()
-    
-    # Summary
     print("\n" + "="*70)
     print("SUMMARY")
     print("="*70)
