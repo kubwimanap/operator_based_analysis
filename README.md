@@ -1,108 +1,87 @@
-# OPERATOR-BASED ANALYSIS OF NUMERICAL PROJECTION PERTURBATIONS IN GRASSMANN MANIFOLD OPTIMIZATION
+# Quadratic perturbation bounds for orthogonal projectors on the Grassmann manifold
 
-**Authors:** Pascal Kubwimana, B. Prabhakar Reddy, Jason M. Mkenyeleye  
-**Affiliation:** University of Dodoma  
-**Contact:** kubwimanap4@gmail.com
+Code for the numerical experiments in
 
----
+> P. Kubwimana, B. Prabhakar Reddy, J. M. Mkenyeleye.
+> *Lazy projection retraction for Grassmann optimization via sharp quadratic perturbation bounds.*
+> Manuscript under review, 2026.
 
-## Overview
+**Contact:** Pascal Kubwimana, Department of Mathematics and Statistics, University of Dodoma — kubwimanap4@gmail.com
 
-Numerical validation of quadratic residual scaling for tangent-structured perturbations on Grassmann manifolds.
+## What the experiments show
 
-### Key Results
+Let `P` be a rank-`p` orthogonal projector and `E` a symmetric perturbation with `‖E‖_F = ε`.
+If `E` is **tangent** to the Grassmann manifold at `P`, i.e. `E = PΔ(I−P) + (I−P)ΔᵀP`, then
 
-- **Quadratic Identity:** P̃² - P̃ = E²
-- **Sharp Bound:** ||P̃² - P̃||_F ≤ ε²/√2
-- **Tangent scaling:** O(ε²)
-- **Non-tangent scaling:** O(ε)
+- `P̃² − P̃ = E²` exactly, where `P̃ = P + E`, so the first-order term cancels;
+- `‖P̃² − P̃‖_F ≤ ε²/√2`, with equality when the reduced perturbation has rank one;
+- `‖P̃² − P̃‖_F ≥ ε²/√(2r)` when the reduced perturbation has rank `r`.
 
----
+A generic symmetric perturbation of the same norm gives a defect of order `ε`.
 
-## Experimental Results
+## Results (seed 0, 30 trials per point)
 
-| ε | Tangent Residual | Non-tangent Residual | Tangent Ratio |
+**Residual scaling** (`n = 100`, `p = 10`)
+
+| ε | Tangent defect | Defect / ε² | Generic defect | Defect / ε |
+|---|---|---|---|---|
+| 1e-6 | 2.373e-13 | 0.237 | 9.060e-07 | 0.906 |
+| 1e-5 | 2.358e-11 | 0.236 | 9.072e-06 | 0.907 |
+| 1e-4 | 2.363e-09 | 0.236 | 9.062e-05 | 0.906 |
+| 1e-3 | 2.367e-07 | 0.237 | 9.059e-04 | 0.906 |
+| 1e-2 | 2.373e-05 | 0.237 | 9.063e-03 | 0.906 |
+| 1e-1 | 2.363e-03 | 0.236 | 9.062e-02 | 0.906 |
+
+At ε = 10⁻⁶ the tangent defect is about 3.8 × 10⁶ times smaller than the generic one.
+
+![Residual scaling](results/residual_scaling.png)
+
+**Rank dependence** (`n = 100`, `ε = 10⁻⁶`)
+
+| Rank p | Defect / ε² | Upper bound 1/√2 | Lower bound 1/√(2p) |
 |---|---|---|---|
-| 1.000e-06 | 2.361e-13 | 9.068e-07 | 0.236 |
-| 1.000e-05 | 2.370e-11 | 9.060e-06 | 0.237 |
-| 1.000e-04 | 2.370e-09 | 9.066e-05 | 0.237 |
-| 1.000e-03 | 2.372e-07 | 9.076e-04 | 0.237 |
-| 1.000e-02 | 2.370e-05 | 9.068e-03 | 0.237 |
-| 1.000e-01 | 2.368e-03 | 9.066e-02 | 0.237 |
+| 1 | 0.707 | 0.707 | 0.707 |
+| 5 | 0.326 | 0.707 | 0.316 |
+| 10 | 0.237 | 0.707 | 0.224 |
+| 20 | 0.178 | 0.707 | 0.158 |
+| 40 | 0.145 | 0.707 | 0.112 |
 
-**Conclusion:** Tangent perturbations are ~3,800× more accurate at ε = 10⁻⁶.
+For a random tangent perturbation the reduced block has rank `r = min(p, n−p)`, so the observed ratio lies between the two bounds and equals the upper bound for `p = 1`.
 
----
+![Rank dependence](results/rank_dependence.png)
 
-## Synthetic Data Results
+## How to reproduce
 
-### Residual Scaling Plot
-
-![Residual Scaling Plot](results/residual_scaling_plot.png)
-
-*Figure 1: Log-log plot showing quadratic (O(ε²)) vs linear (O(ε)) scaling of residuals for synthetic data (n=100, p=10).*
-
-### Rank Dependence Plot
-
-![Rank Dependence](results/rank_dependence.png)
-
-*Figure 2: Backward error vs rank p at ε = 10⁻⁶, showing decrease with rank.*
-
----
-
-## Rank Dependence (ε = 10⁻⁶)
-
-| Rank p | Backward Error | Ratio |
-|--------|---------------|-------|
-| 1 | 7.100e-13 | 0.707 |
-| 5 | 3.200e-13 | 0.325 |
-| 10 | 2.400e-13 | 0.237 |
-| 20 | 1.800e-13 | 0.178 |
-| 40 | 1.500e-13 | 0.145 |
-
----
-
-## CIFAR-10 Validation Results
-
-### CIFAR-10 Residual Scaling
-
-![CIFAR-10 Results](results/cifar10_residual_scaling.png)
-
-*Figure 3: Residual scaling on CIFAR-10 PCA projector (n=1024, p=10), confirming quadratic behavior on real data.*
-
-| ε | Tangent Residual | Tangent Error | Ratio |
-|---|---|---|---|
-| 1.000e-02 | 2.250e-05 | 2.250e-05 | 0.225 |
-| 1.000e-04 | 2.250e-09 | 2.250e-09 | 0.225 |
-| 1.000e-06 | 2.260e-13 | 2.260e-13 | 0.226 |
-
-**Conclusion:** The quadratic law holds for real-world data projectors.
-
----
-
-## Usage
+Requires Python 3.9 or later.
 
 ```bash
-cd python
-python experiments.py
+pip install -r python/requirements.txt
+python python/experiments.py            # synthetic experiments (about 1 minute)
+python python/experiments.py --cifar    # also the CIFAR-10 check (downloads data from OpenML)
+```
 
+The script fixes the random seed, prints the tables above and writes CSV files and figures to `results/`.
 
-operator_based_analysis/
-├── python/
-│   ├── experiments.py
-│   ├── projector_utils.py
-│   ├── visualization.py
-│   └── requirements.txt
-├── results/
-│   └── grassmann_experiment_results.csv
-├── Synthetic_matlab/
-├── synthetic_dataset/
-└── README.md
+The optional CIFAR-10 check builds a rank-10 PCA projector from 8,000 grayscale CIFAR-10 images (`n = 1024`) and repeats the tangent test around it. Since the defect equals `‖E²‖_F`, it depends on the perturbation and not on which projector is chosen; the check confirms that the identity holds numerically for a data-derived projector. The script stops with an error if the data cannot be downloaded.
 
+MATLAB versions are in `matlab/`:
 
-@article{kubwimana2026operator,
-  title={Operator-Based Analysis of Numerical Projection Perturbations in Grassmann Manifold Optimization},
-  author={Kubwimana, Pascal and Reddy, B. Prabhakar and Mkenyeleye, Jason M.},
-  year={2026}
-}
+- `tangent_residual_check.m` — the residual-scaling test above;
+- `basis_perturbation_check.m` — perturbs the basis and re-orthonormalises; the result is an exact projector, so the defect stays at rounding level.
 
+## Repository layout
+
+```
+python/
+  projector_utils.py   projectors, tangent and generic perturbations, defect, backward error
+  experiments.py       runs all experiments and writes results/
+  requirements.txt
+matlab/
+  tangent_residual_check.m
+  basis_perturbation_check.m
+results/               CSV tables and figures produced by experiments.py
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
