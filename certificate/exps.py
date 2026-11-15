@@ -11,7 +11,7 @@ import argparse, json, time, os, sys
 import numpy as np
 
 U64 = 2.0 ** -53            # unit roundoff, IEEE double
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results")
 os.makedirs(OUT, exist_ok=True)
 
 
@@ -36,6 +36,17 @@ def fp_floor(A, u=U64):
     """Worst-case error of the computed residual (Proposition 3.8)."""
     n = A.shape[0]
     return (1 + u) * gamma(n, u) * np.linalg.norm(A) ** 2
+
+
+def cert_skip(P, R, eps, tau, u=U64):
+    """Certified test of Proposition 5.2: True if the iterate may be kept (no re-projection).
+    Includes the rounding of the norms, of the scalar operations and the rank guard of Lemma 5.1."""
+    n = P.shape[0]
+    rh = float(np.linalg.norm(R)); ah = float(np.sum(P * P)); pn = float(np.sqrt(ah))
+    rho_plus = (rh / (1 - gamma(n * n + 1, u)) + (1 + u) * gamma(n, u) * ah / (1 - gamma(n * n, u))) / (1 - u)
+    ok_cert = rho_plus <= (1 - gamma(20, u)) * tau * (1 - tau)
+    ok_rank = eps * (1 + gamma(n * n + 1, u)) + 3 * u * (pn + eps) < 0.5 - tau
+    return ok_cert and ok_rank, ok_cert and not ok_rank
 
 
 def dist_to_projectors(A):
@@ -310,8 +321,8 @@ def lazy_rgd(A, p, P0, t, tau, policy, shift, tol, maxit, Pstar, rng, monitor=Tr
             do = beta > tau
         else:
             R = P @ P - P; ngemm_cert += 1
-            rho = np.linalg.norm(R) + fp_floor(P)
-            do = (rho >= 0.25) or (phi(rho) > tau)
+            keep, _ = cert_skip(P, R, eps, tau)
+            do = not keep
         if do:
             w, V = np.linalg.eigh(P); Q = V[:, -p:]; P = Q @ Q.T; neig += 1; beta = 0.0
             if shift:
@@ -402,7 +413,7 @@ def exp_trace(seeds=1, prob="syn_300_0.1", tau=1e-10):
             if pol == "apriori":
                 beta += eps ** 2 / np.sqrt(2); do = beta > tau
             else:
-                rho = np.linalg.norm(P @ P - P) + fp_floor(P); do = rho >= 0.25 or phi(rho) > tau
+                keep, _ = cert_skip(P, P @ P - P, eps, tau); do = not keep
             if do:
                 w, V = np.linalg.eigh(P); Q = V[:, -p:]; P = Q @ Q.T; neig += 1; beta = 0.0
                 if sh:
@@ -444,9 +455,8 @@ def lazy_rgd_p(A, p, P0, eta, tau, policy, shift, tol, maxit, Pstar, rng, dtype=
             beta += eps ** 2 / np.sqrt(2); do = beta > tau
         else:
             R = P @ P - P
-            nrm = float(np.linalg.norm(P))
-            rho = (float(np.linalg.norm(R)) + (1 + u) * gamma(n, u) * nrm ** 2) / (1 - u)
-            do = (rho >= 0.25) or (phi(rho) > tau)
+            keep, _ = cert_skip(P, R, eps, tau, u)
+            do = not keep
         if do:
             w, V = np.linalg.eigh(P); Q = V[:, -p:]; P = Q @ Q.T; neig += 1; beta = 0.0
             if shift:

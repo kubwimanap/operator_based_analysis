@@ -1,0 +1,3 @@
+digits_5 q 0.9416 K 9.90 floor 1.70e-08 diff 1.17e-15
+digits_10 q 0.9507 K 9.90 floor 2.01e-08 diff 1.27e-15
+syn_300_0.5 q 0.7365 K 9.90 floor 3.76e-09 diff 1.98e-15

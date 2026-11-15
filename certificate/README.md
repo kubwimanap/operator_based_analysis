@@ -137,22 +137,32 @@ both bounds being attained (Theorem 4.2). Tangent perturbations of a projector a
 
 ![Lazy re-projection](figures/fig2_lazy.png)
 
+## Revision after referee report (November 2026)
+
+* `exps.py`: the certified test (`cert_skip`) now includes the rounding of both norms and of the scalar operations (Proposition 4.8) and the rank guard of Lemma 5.1; `bench`, `sens_alg` and `trace` were re-run with it. `lazy_counts.json` and `lazy_time.json` are kept from the previous version and are superseded by `baselines.json` and `time2.json`.
+* `exps2.py` (new): `baselines` (always, certified, a priori, every 10th step, McWeeny purification, certified + purification, with and without shift; work counted in matrix products, an eigendecomposition = 4.5), `time2` (n = 1000, median and IQR, including a frame-based QR retraction), `shift` (Lemma 5.3, predicted vs observed defect growth), `accuracy` (Theorem 5.4, contraction factor and bound).
+* `supplementary_tables.pdf`: Tables S1-S4 of the revised manuscript.
+
+Key findings: the certified test removes 47-55% of eigendecompositions and 17-22% of the work while every iterate stays within tau; re-projecting every 10th step (48%) or purifying every step (23%) needs less work but lets iterates move to distance up to 5.2 and 0.15 from the manifold; a frame-based method is about 150x faster at n = 1000 when only the subspace is needed. The shift lemma predicts the observed defect growth within 6%.
+
 ## How to reproduce
 
-Requires Python 3.9+ (`pip install -r requirements.txt`): NumPy, matplotlib and scikit-learn (the UCI digits data ship with scikit-learn; no download needed).
+Requires Python 3.9+ (`pip install -r requirements.txt`).
 
 ```bash
 cd certificate
-python exps.py sharp        # Table 1  (known cases, equality cases)
-python exps.py bench        # Table 2  (benchmarks B1, B2', double and single precision)
-python exps.py sens_alg     # Table 3  (step size and tolerance sensitivity)
-python exps.py cert         # Table 4, Fig. 1
-python exps.py sens         # Table 3  (dimension sensitivity)
-python exps.py floor        # Table 5  (rounding floor)
-python exps.py computed     # Table 6  (double / single / half precision, Gram-Schmidt)
-python exps.py lazy_counts  # Table 7  (five re-projection policies)
-python exps.py lazy_time --seeds 5   # Table 8 (timings, n = 1000; about 35 min)
-python exps.py trace        # data for Fig. 2
+python exps.py sharp        # Table 1 (known cases)
+python exps.py cert         # Fig. 1, Table S2
+python exps.py sens         # Table S1 (dimension sensitivity)
+python exps.py floor        # rounding floor
+python exps.py computed     # Table S3 (computed projectors)
+python exps.py bench        # Table 3 (Syn-100, Digits-64, double and single)
+python exps.py sens_alg     # Table S1 (step size and tolerance)
+python exps.py trace        # Fig. 2
+python exps2.py shift       # Table 2, Lemma 5.3
+python exps2.py accuracy    # Table 2, Theorem 5.4
+python exps2.py baselines   # Table 4, Table S4
+python exps2.py time2 --seeds 10   # Table 5 (run alone; about 1 hour)
 python figures.py           # Figures 1-2
 ```
 

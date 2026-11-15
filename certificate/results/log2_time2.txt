@@ -1,0 +1,12 @@
+syn_1000_0.5 always it 88.5 time med 14.60 err 1.36e-10
+syn_1000_0.5 certified it 88.5 time med 11.51 err 1.36e-10
+syn_1000_0.5 apriori it 88.5 time med 10.53 err 1.36e-10
+syn_1000_0.5 periodic_5 it 88.6 time med 8.18 err 1.39e-10
+syn_1000_0.5 purify it 88.5 time med 10.44 err 1.36e-10
+syn_1000_0.5 cert_purify it 88.5 time med 12.67 err 1.36e-10
+syn_1000_0.5 frame_qr it 88.4 time med 0.09 err 1.36e-10
+syn_1000_0.1 always it 431.2 time med 66.62 err 6.74e-10
+syn_1000_0.1 certified it 431.2 time med 57.43 err 6.74e-10
+syn_1000_0.1 periodic_5 it 431.4 time med 40.62 err 6.81e-10
+syn_1000_0.1 purify it 431.2 time med 47.16 err 6.74e-10
+syn_1000_0.1 frame_qr it 431.0 time med 0.46 err 6.89e-10

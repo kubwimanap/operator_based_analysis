@@ -1,0 +1,4 @@
+syn_300_0.5 False pred 1.998283 obs 1.907015
+syn_300_0.5 True pred 0.755149 obs 0.765130
+digits_10 False pred 1.318636 obs 1.278568
+digits_10 True pred 0.954087 obs 0.937523
