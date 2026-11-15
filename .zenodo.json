@@ -11,6 +11,6 @@
   "access_right": "open",
   "keywords": ["Grassmann manifold", "orthogonal projector", "idempotency residual", "nearest projector", "rounding error analysis", "Riemannian optimization"],
   "related_identifiers": [
-    {"identifier": "10.21203/rs.3.rs-10428281/v1", "relation": "isSupplementTo", "scheme": "doi"}
+    {"identifier": "10.21203/rs.3.rs-10428281/v1", "relation": "references", "scheme": "doi"}
   ]
 }
