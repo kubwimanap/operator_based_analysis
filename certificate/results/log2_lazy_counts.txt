@@ -1,0 +1,2 @@
+syn_300_0.5 always True it 88.2 eig 88.2 maxd 1.01e-14 err 1.40e-10
+syn_300_0.5 apriori True it 88.2 eig 48.1 maxd 9.83e-11 err 1.40e-10

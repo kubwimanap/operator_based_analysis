@@ -1,8 +1,8 @@
-# Idempotency residuals as sharp certificates of distance to the Grassmann manifold
+# Sharp residual certificates for projector iterates on the Grassmann manifold
 
 Code, data and results for the revised manuscript
 
-> P. Kubwimana, B. Prabhakar Reddy, J. M. Mkenyeleye. *Idempotency residuals as sharp certificates of distance to the Grassmann manifold, with an application to certified lazy re-projection.* Manuscript, 2026.
+> P. Kubwimana, B. Prabhakar Reddy, J. M. Mkenyeleye. *Sharp residual certificates for projector iterates on the Grassmann manifold under numerical perturbations.* Manuscript, 2026.
 
 This folder supersedes the experiments in `../python/` (preprint version, Research Square [10.21203/rs.3.rs-10428281/v1](https://doi.org/10.21203/rs.3.rs-10428281/v1)), which are kept unchanged for reference.
 
@@ -14,11 +14,11 @@ For every symmetric matrix `A` with residual `ρ = ‖A² − A‖_F < 1/4`, the
 ψ(ρ) = 2ρ / (1 + √(1 + 4ρ))  ≤  δ(A)  ≤  2ρ / (1 + √(1 − 4ρ)) = φ(ρ),
 ```
 
-both bounds being attained (Theorem 3.2). Tangent perturbations of a projector attain the lower bound eigenvalue-wise; the normal component of a general perturbation equals the distance to first order; orthonormality drift `‖XᵀX − I‖_F` equals `δ(XXᵀ)`.
+both bounds being attained (Theorem 4.2). Tangent perturbations of a projector attain the lower bound eigenvalue-wise; the normal component of a general perturbation equals the distance to first order; orthonormality drift `‖XᵀX − I‖_F` equals `δ(XXᵀ)`.
 
 ## Results (30 seeds, mean ± sd)
 
-**Equality cases** (Table 2; `n = 100`, `p = 10`)
+**Equality cases** (Table 1; `n = 100`, `p = 10`)
 
 | Case | Prediction | Observed |
 |---|---|---|
@@ -27,7 +27,7 @@ both bounds being attained (Theorem 3.2). Tangent perturbations of a projector a
 | One inward eigenvalue, δ/φ(ρ) | 1 | 1.000000 |
 | One outward eigenvalue, δ/ψ(ρ) | 1 | 1.000000 |
 
-**Certificate across perturbation types** (Table 3; `n = 100`, `p = 10`, means; all trials valid)
+**Certificate across perturbation types** (Table 4; `n = 100`, `p = 10`, means; all trials valid)
 
 | Type | ε | δ/ψ(ρ) | δ/φ(ρ) | δ/(2ρ) |
 |---|---|---|---|---|
@@ -58,6 +58,44 @@ both bounds being attained (Theorem 3.2). Tangent perturbations of a projector a
 | synthetic (p=10) | eigh32 | 1.9e-08 | 1.9e-08 | 1.2e-07 |
 | synthetic (p=10) | store16 | 1.5e-04 | 1.5e-04 | 6.5e-04 |
 | synthetic (p=10) | cgs_power | 6.2e-14 | 6.2e-13 | 4.7e-15 |
+
+**Benchmark suite** (Table 2; 30 seeds; B1 = synthetic Gr(100,10), B2′ = UCI digits covariance)
+
+| Problem | Precision | Policy | Final dist | Iterations | Eigendecompositions | Divergences |
+|---|---|---|---|---|---|---|
+| B1 | float64 | always + shift | 6.15e-10 | 379.3 | 379.3 | 0 |
+| B1 | float64 | apriori + shift | 6.15e-10 | 379.3 | 173.9 | 0 |
+| B1 | float64 | certified + shift | 6.15e-10 | 379.3 | 172.9 | 0 |
+| B1 | float64 | certified, no shift | 6.00e-10 | 379.7 | 188.8 | 0 |
+| B1 | float64 | certified, τ = 0 | 6.15e-10 | 379.3 | 379.3 | 0 |
+| B1 | float32 | always + shift | 5.93e-05 | 182.4 | 182.4 | 0 |
+| B1 | float32 | apriori + shift | 5.92e-05 | 182.4 | 57.2 | 0 |
+| B1 | float32 | certified + shift | 5.93e-05 | 182.4 | 58.9 | 0 |
+| B1 | float32 | certified, no shift | 5.03e-05 | 185.4 | 72.9 | 0 |
+| B2 | float64 | always + shift | 1.45e-09 | 428.9 | 428.9 | 0 |
+| B2 | float64 | apriori + shift | 1.45e-09 | 428.9 | 199.4 | 0 |
+| B2 | float64 | certified + shift | 1.45e-09 | 428.9 | 198.2 | 0 |
+| B2 | float64 | certified, no shift | 1.45e-09 | 428.9 | 206.8 | 0 |
+| B2 | float64 | certified, τ = 0 | 1.45e-09 | 428.9 | 428.9 | 0 |
+| B2 | float32 | always + shift | 1.41e-04 | 195.4 | 195.4 | 0 |
+| B2 | float32 | apriori + shift | 1.41e-04 | 195.4 | 62.9 | 0 |
+| B2 | float32 | certified + shift | 1.41e-04 | 195.4 | 63.2 | 0 |
+| B2 | float32 | certified, no shift | 1.28e-04 | 197.7 | 70.4 | 0 |
+
+**Sensitivity of Algorithm 1** (Table 3; B1, double, certified + shift)
+
+| Factor | Value | Iterations | Eigendecompositions saved | Divergences |
+|---|---|---|---|---|
+| step | 0.25 | 1527.7 | 61% | 0 |
+| step | 0.5 | 761.3 | 58% | 0 |
+| step | 1 | 379.3 | 55% | 0 |
+| step | 1.5 | 249.9 | 53% | 0 |
+| step | 2 | 4999.0 | 0% | 30 |
+| tau | 1e-14 | 379.3 | 0% | 0 |
+| tau | 1e-12 | 379.3 | 44% | 0 |
+| tau | 1e-10 | 379.3 | 55% | 0 |
+| tau | 1e-08 | 379.3 | 65% | 0 |
+| tau | 1e-06 | 379.3 | 75% | 0 |
 
 **Certified lazy re-projection** (Table 7; τ = 1e-10)
 
@@ -99,20 +137,32 @@ both bounds being attained (Theorem 3.2). Tangent perturbations of a projector a
 
 ![Lazy re-projection](figures/fig2_lazy.png)
 
+## Revision after referee report (November 2026)
+
+* `exps.py`: the certified test (`cert_skip`) now includes the rounding of both norms and of the scalar operations (Proposition 4.8) and the rank guard of Lemma 5.1; `bench`, `sens_alg` and `trace` were re-run with it. `lazy_counts.json` and `lazy_time.json` are kept from the previous version and are superseded by `baselines.json` and `time2.json`.
+* `exps2.py` (new): `baselines` (always, certified, a priori, every 10th step, McWeeny purification, certified + purification, with and without shift; work counted in matrix products, an eigendecomposition = 4.5), `time2` (n = 1000, median and IQR, including a frame-based QR retraction), `shift` (Lemma 5.3, predicted vs observed defect growth), `accuracy` (Theorem 5.4, contraction factor and bound).
+* `supplementary_tables.pdf`: Tables S1-S4 of the revised manuscript.
+
+Key findings: the certified test removes 47-55% of eigendecompositions and 17-22% of the work while every iterate stays within tau; re-projecting every 10th step (48%) or purifying every step (23%) needs less work but lets iterates move to distance up to 5.2 and 0.15 from the manifold; a frame-based method is about 150x faster at n = 1000 when only the subspace is needed. The shift lemma predicts the observed defect growth within 6%.
+
 ## How to reproduce
 
-Requires Python 3.9+ (`pip install -r requirements.txt`): NumPy, matplotlib and scikit-learn (the UCI digits data ship with scikit-learn; no download needed).
+Requires Python 3.9+ (`pip install -r requirements.txt`).
 
 ```bash
 cd certificate
-python exps.py sharp        # Table 2  (equality cases)
-python exps.py cert         # Table 3, Fig. 1
-python exps.py sens         # Table 4  (dimension sensitivity)
-python exps.py floor        # Table 5  (rounding floor)
-python exps.py computed     # Table 6  (double / single / half precision, Gram-Schmidt)
-python exps.py lazy_counts  # Table 7  (five re-projection policies)
-python exps.py lazy_time --seeds 5   # Table 8 (timings, n = 1000; about 35 min)
-python exps.py trace        # data for Fig. 2
+python exps.py sharp        # Table 1 (known cases)
+python exps.py cert         # Fig. 1, Table S2
+python exps.py sens         # Table S1 (dimension sensitivity)
+python exps.py floor        # rounding floor
+python exps.py computed     # Table S3 (computed projectors)
+python exps.py bench        # Table 3 (Syn-100, Digits-64, double and single)
+python exps.py sens_alg     # Table S1 (step size and tolerance)
+python exps.py trace        # Fig. 2
+python exps2.py shift       # Table 2, Lemma 5.3
+python exps2.py accuracy    # Table 2, Theorem 5.4
+python exps2.py baselines   # Table 4, Table S4
+python exps2.py time2 --seeds 10   # Table 5 (run alone; about 1 hour)
 python figures.py           # Figures 1-2
 ```
 

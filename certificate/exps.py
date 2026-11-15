@@ -11,7 +11,7 @@ import argparse, json, time, os, sys
 import numpy as np
 
 U64 = 2.0 ** -53            # unit roundoff, IEEE double
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results")
 os.makedirs(OUT, exist_ok=True)
 
 
@@ -36,6 +36,17 @@ def fp_floor(A, u=U64):
     """Worst-case error of the computed residual (Proposition 3.8)."""
     n = A.shape[0]
     return (1 + u) * gamma(n, u) * np.linalg.norm(A) ** 2
+
+
+def cert_skip(P, R, eps, tau, u=U64):
+    """Certified test of Proposition 5.2: True if the iterate may be kept (no re-projection).
+    Includes the rounding of the norms, of the scalar operations and the rank guard of Lemma 5.1."""
+    n = P.shape[0]
+    rh = float(np.linalg.norm(R)); ah = float(np.sum(P * P)); pn = float(np.sqrt(ah))
+    rho_plus = (rh / (1 - gamma(n * n + 1, u)) + (1 + u) * gamma(n, u) * ah / (1 - gamma(n * n, u))) / (1 - u)
+    ok_cert = rho_plus <= (1 - gamma(20, u)) * tau * (1 - tau)
+    ok_rank = eps * (1 + gamma(n * n + 1, u)) + 3 * u * (pn + eps) < 0.5 - tau
+    return ok_cert and ok_rank, ok_cert and not ok_rank
 
 
 def dist_to_projectors(A):
@@ -310,8 +321,8 @@ def lazy_rgd(A, p, P0, t, tau, policy, shift, tol, maxit, Pstar, rng, monitor=Tr
             do = beta > tau
         else:
             R = P @ P - P; ngemm_cert += 1
-            rho = np.linalg.norm(R) + fp_floor(P)
-            do = (rho >= 0.25) or (phi(rho) > tau)
+            keep, _ = cert_skip(P, R, eps, tau)
+            do = not keep
         if do:
             w, V = np.linalg.eigh(P); Q = V[:, -p:]; P = Q @ Q.T; neig += 1; beta = 0.0
             if shift:
@@ -402,7 +413,7 @@ def exp_trace(seeds=1, prob="syn_300_0.1", tau=1e-10):
             if pol == "apriori":
                 beta += eps ** 2 / np.sqrt(2); do = beta > tau
             else:
-                rho = np.linalg.norm(P @ P - P) + fp_floor(P); do = rho >= 0.25 or phi(rho) > tau
+                keep, _ = cert_skip(P, P @ P - P, eps, tau); do = not keep
             if do:
                 w, V = np.linalg.eigh(P); Q = V[:, -p:]; P = Q @ Q.T; neig += 1; beta = 0.0
                 if sh:
@@ -413,6 +424,122 @@ def exp_trace(seeds=1, prob="syn_300_0.1", tau=1e-10):
     json.dump(out, open(os.path.join(OUT, "trace.json"), "w"))
 
 
+# ---------------------------------------------------------------- template benchmarks (B1, B2) and sensitivity
+U32 = 2.0 ** -24
+
+
+def lazy_rgd_p(A, p, P0, eta, tau, policy, shift, tol, maxit, Pstar, rng, dtype=np.float64):
+    """lazy_rgd in a given working precision (float64 or float32); returns iterations, eigendecompositions,
+    final subspace distance, wall time and whether the tolerance was reached."""
+    u = U64 if dtype == np.float64 else U32
+    A = A.astype(dtype); P = P0.astype(dtype)
+    n = A.shape[0]
+    w, V = np.linalg.eigh(P); Q = V[:, -p:]
+    mu = dtype(_mu_shift(A.astype(np.float64), Q.astype(np.float64), rng)) if shift else dtype(0)
+    beta = 0.0; neig = 0; conv = False
+    t0 = time.perf_counter()
+    for k in range(maxit):
+        PA = (A @ P).T
+        G = PA - PA @ P - mu * (P - P @ P)
+        E = dtype(eta) * (G + G.T)
+        eps = float(np.linalg.norm(E))
+        if not np.isfinite(eps):
+            break
+        if eps / eta < tol:
+            conv = True
+            break
+        P = P + E; P = (P + P.T) / dtype(2)
+        if policy == "always":
+            do = True
+        elif policy == "apriori":
+            beta += eps ** 2 / np.sqrt(2); do = beta > tau
+        else:
+            R = P @ P - P
+            keep, _ = cert_skip(P, R, eps, tau, u)
+            do = not keep
+        if do:
+            w, V = np.linalg.eigh(P); Q = V[:, -p:]; P = Q @ Q.T; neig += 1; beta = 0.0
+            if shift:
+                mu = dtype(_mu_shift(A.astype(np.float64), Q.astype(np.float64), rng))
+    el = time.perf_counter() - t0
+    P64 = P.astype(np.float64); P64 = (P64 + P64.T) / 2
+    w, V = np.linalg.eigh(P64); Q = V[:, -p:]
+    return dict(iters=k, eig=neig, final_dist=float(np.linalg.norm(Q @ Q.T - Pstar) / np.sqrt(2)),
+                time=el, conv=conv)
+
+
+def _bench_problem(name, rng):
+    if name == "B1":
+        A = _synthetic_cov(rng, 100, 10, 0.1); p = 10
+    else:   # B2 substitute: UCI digits covariance
+        A = _digits_cov(rng, 1797); p = 10
+    w, V = np.linalg.eigh(A)
+    return A, p, V[:, -p:] @ V[:, -p:].T, 1.0 / (w[-1] - w[0])
+
+
+def exp_bench(seeds):
+    """Template Table 2: benchmark suite, float64 and float32."""
+    res = []
+    settings = {np.float64: (1e-10, 1e-10), np.float32: (2e-4, 1e-5)}
+    pols = [("always", True, 1.0), ("apriori", True, 1.0), ("certified", True, 1.0), ("certified", False, 1.0)]
+    for prob in ["B1", "B2"]:
+        for dt in [np.float64, np.float32]:
+            tau, tol = settings[dt]
+            for pol, sh, _ in pols + [("certified0", True, 1.0)]:
+                rows = []
+                for s in range(seeds):
+                    rng = np.random.default_rng(7000 + s)
+                    A, p, Pstar, eta = _bench_problem(prob, rng)
+                    Q0 = random_frame(rng, A.shape[0], p)
+                    pp = "certified" if pol == "certified0" else pol
+                    tt = 0.0 if pol == "certified0" else tau
+                    rows.append(lazy_rgd_p(A, p, Q0 @ Q0.T, eta, tt, pp, sh, tol, 5000, Pstar,
+                                           np.random.default_rng(s), dt))
+                if pol == "certified0" and dt != np.float64:
+                    continue
+                r = dict(problem=prob, dtype=dt.__name__, policy=pol, shift=sh, tau=tau if pol != "certified0" else 0.0,
+                         final_dist=ms([x["final_dist"] for x in rows]), iters=ms([x["iters"] for x in rows]),
+                         eig=ms([x["eig"] for x in rows]), time=ms([x["time"] for x in rows]),
+                         divergences=int(sum(not x["conv"] for x in rows)))
+                res.append(r)
+                print(prob, dt.__name__, pol, sh, "it %.1f eig %.1f dist %.2e div %d" % (
+                    r["iters"]["mean"], r["eig"]["mean"], r["final_dist"]["mean"], r["divergences"]), flush=True)
+    json.dump(res, open(os.path.join(OUT, "bench.json"), "w"), indent=1)
+
+
+def exp_sens_alg(seeds):
+    """Template Table 3: sensitivity of Algorithm 1 (certified + shift, B1, float64) to step size and tau."""
+    res = []
+    for c in [0.25, 0.5, 1.0, 1.5, 2.0]:
+        rows = []
+        for s in range(seeds):
+            rng = np.random.default_rng(7000 + s)
+            A, p, Pstar, eta = _bench_problem("B1", rng)
+            Q0 = random_frame(rng, A.shape[0], p)
+            rows.append(lazy_rgd_p(A, p, Q0 @ Q0.T, c * eta, 1e-10, "certified", True, 1e-10, 5000, Pstar,
+                                   np.random.default_rng(s)))
+            rows[-1]["always"] = lazy_rgd_p(A, p, Q0 @ Q0.T, c * eta, 0.0, "always", True, 1e-10, 5000, Pstar,
+                                            np.random.default_rng(s))["eig"]
+        res.append(dict(factor="step", value=c, iters=ms([x["iters"] for x in rows]), eig=ms([x["eig"] for x in rows]),
+                        saved=ms([1 - x["eig"] / max(x["always"], 1) for x in rows]),
+                        final_dist=ms([x["final_dist"] for x in rows]), divergences=int(sum(not x["conv"] for x in rows))))
+        print("step", c, res[-1]["iters"]["mean"], res[-1]["saved"]["mean"], res[-1]["divergences"], flush=True)
+    for tau in [1e-14, 1e-12, 1e-10, 1e-8, 1e-6]:
+        rows = []
+        for s in range(seeds):
+            rng = np.random.default_rng(7000 + s)
+            A, p, Pstar, eta = _bench_problem("B1", rng)
+            Q0 = random_frame(rng, A.shape[0], p)
+            r = lazy_rgd_p(A, p, Q0 @ Q0.T, eta, tau, "certified", True, 1e-10, 5000, Pstar, np.random.default_rng(s))
+            r["always"] = r["iters"]
+            rows.append(r)
+        res.append(dict(factor="tau", value=tau, iters=ms([x["iters"] for x in rows]), eig=ms([x["eig"] for x in rows]),
+                        saved=ms([1 - x["eig"] / max(x["iters"], 1) for x in rows]),
+                        final_dist=ms([x["final_dist"] for x in rows]), divergences=int(sum(not x["conv"] for x in rows))))
+        print("tau", tau, res[-1]["iters"]["mean"], res[-1]["saved"]["mean"], res[-1]["divergences"], flush=True)
+    json.dump(res, open(os.path.join(OUT, "sens_alg.json"), "w"), indent=1)
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("exp")
@@ -420,7 +547,7 @@ if __name__ == "__main__":
     a = ap.parse_args()
     f = {"cert": exp_cert, "sharp": exp_sharp, "sens": exp_sens, "floor": exp_floor,
          "computed": exp_computed, "lazy_counts": exp_lazy_counts, "lazy_time": exp_lazy_time,
-         "trace": lambda s: exp_trace()}
+         "trace": lambda s: exp_trace(), "bench": exp_bench, "sens_alg": exp_sens_alg}
     if a.exp == "all":
         for k in ["sharp", "cert", "sens", "floor", "computed", "lazy_counts", "lazy_time"]:
             f[k](a.seeds if k != "lazy_time" else 5)
