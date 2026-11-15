@@ -1,5 +1,8 @@
 # Quadratic perturbation bounds for orthogonal projectors on the Grassmann manifold
 
+> **Update (November 2026).** The revised manuscript *Idempotency residuals as sharp certificates of distance to the Grassmann manifold, with an application to certified lazy re-projection* replaces the experiments below. Its code, data and results (30 seeds, all tables and figures) are in [`certificate/`](certificate/README.md). The material below belongs to the earlier preprint version and is kept unchanged for reference.
+
+
 Code for the numerical experiments in
 
 > P. Kubwimana, B. Prabhakar Reddy, J. M. Mkenyeleye.
@@ -72,6 +75,7 @@ MATLAB versions are in `matlab/`:
 ## Repository layout
 
 ```
+certificate/           revised manuscript: exps.py, figures.py, run_all.sh, results/, figures/
 python/
   projector_utils.py   projectors, tangent and generic perturbations, defect, backward error
   experiments.py       runs all experiments and writes results/
