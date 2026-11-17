@@ -1,5 +1,9 @@
 # Sharp residual certificates for projector iterates on the Grassmann manifold
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24251443.svg)](https://doi.org/10.5281/zenodo.24251443)
+
+Archived on Zenodo: version 1.0.0, DOI [10.5281/zenodo.24251443](https://doi.org/10.5281/zenodo.24251443); all versions: [10.5281/zenodo.24251442](https://doi.org/10.5281/zenodo.24251442).
+
 Code, data and results for the revised manuscript
 
 > P. Kubwimana, B. Prabhakar Reddy, J. M. Mkenyeleye. *Sharp residual certificates for projector iterates on the Grassmann manifold under numerical perturbations.* Manuscript, 2026.
